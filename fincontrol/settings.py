@@ -1,5 +1,6 @@
 from pathlib import Path
 from dotenv import load_dotenv
+from django.contrib import messages
 import dj_database_url
 import os
 import django_heroku
@@ -69,15 +70,18 @@ WSGI_APPLICATION = "fincontrol.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    # "default": {
-    #     "ENGINE": "django.db.backends.postgresql",
-    #     "NAME": os.getenv("DB_NAME"),
-    #     "USER": os.getenv("DB_USER"),
-    #     "PASSWORD": os.getenv("DB_USER_PASSWORD"),
-    #     "HOST": os.getenv("DB_HOST"),
-    # }
-    "default": dj_database_url.config(default=os.getenv("DATABASE_URL"))
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_USER_PASSWORD"),
+        "HOST": os.getenv("DB_HOST"),
+    }
 }
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL:
+    DATABASES["default"] = dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
 
 
 # Password validation
@@ -125,3 +129,17 @@ django_heroku.settings(locals())
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+MESSAGE_TAGS = {
+    messages.ERROR: "danger",
+}
+
+
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_USE_TLS = True
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_PORT = 587
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
