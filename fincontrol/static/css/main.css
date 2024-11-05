@@ -22,3 +22,37 @@
 .showPasswordToggle:hover {
     transform: scale(1.2);
 }
+
+.sidebar {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    height: calc(100vh - 70px);
+    width: 200px;
+    background-color: #f8f9fa;
+    padding: 20px;
+    overflow: auto;
+    transition: all 0.3s ease;
+}
+
+.main-content {
+    margin-left: 200px;
+    padding: 20px;
+    transition: margin-left 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+}
+
+body, .main-content {
+    overflow-x: hidden;
+}
