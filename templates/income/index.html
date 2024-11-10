@@ -7,53 +7,54 @@
         <div class="col-md-10">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="">Витрати</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Мої витрати</li>
+                    <li class="breadcrumb-item"><a href="">Надходження</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Мої надходження</li>
                 </ol>
             </nav>
         </div>
         
         <div class="col-md-2">
-            <a href="{% url 'add-expenses' %}" class="btn btn-primary">Додати</a>
+            <a href="{% url 'add-income' %}" class="btn btn-primary">Додати</a>
         </div>
     </div>
+
     <div class="container">
         {% include 'partials/_messages.html' %}
-        {% if expenses.count %}
-            
+        {% if income.count %}
+
         <div class="row">
-        
+
             <div class="col-md-8"></div>
             <div class="col-md-4">
                 <div class="form-group">
                     <input type="text" class="form-control" id="searchField" placeholder="Пошук">
-                        
+
                 </div>
             </div>
-        
+
         </div>
-            
+
         <div class="app-table">
             <table class="table table-stripped table-hover">
                 <thead>
                     <tr>
                         <th>Сума ({{ currency }})</th>
-                        <th>Категорія</th>
+                        <th>Джерело надходження</th>
                         <th>Опис</th>
                         <th>Дата</th>
                         <th></th>
                     </tr>
                 </thead>
-                
+
                 <tbody>
-                    {% for expense in page_obj %}
+                    {% for income in page_obj %}
                         <tr>
-                            <td>{{ expense.amount }}</td>
-                            <td>{{ expense.category }}</td> 
-                            <td>{{ expense.description }}</td>
-                            <td>{{ expense.date }}</td>
+                            <td>{{ income.amount }}</td>
+                            <td>{{ income.source }}</td> 
+                            <td>{{ income.description }}</td>
+                            <td>{{ income.date }}</td>
                             <td><a 
-                                    href="{% url 'edit-expense' expense.id %}" 
+                                    href="{% url 'edit-income' income.id %}" 
                                     class="btn btn-secondary btn-sm">Редагувати</a>
                             </td>
                         </tr>
@@ -61,30 +62,30 @@
                 </tbody>
             </table>
         </div>
-            
+
         <p class="no-results" style="display: none;">Нічого не знайдено</p>
             <div class="table-output">
-            
+
                 <table class="table table-stripped table-hover">
                     <thead>
                         <tr>
                             <th>Сума {{ currency }}</th>
-                            <th>Категорія</th>
+                            <th>Джерело</th>
                             <th>Опис</th>
                             <th>Дата</th>
                             <th></th>
                         </tr>
                     </thead>
-                    
+
                     <tbody class="table-body">
-                        
+
                     </tbody>
                 </table>
-            
+
             </div>
-            
+
         <div class="pagination-container">    
-            
+
         <div class="">
             Сторінка {{ page_obj.number }} з {{ page_obj.paginator.num_pages }}
         </div>
@@ -93,7 +94,7 @@
           <li {% if page_obj.number == 1 %} class="page-item active" {% endif %}><a class="page-link" href="?page=1">&laquo; 1</a></li>
           <li class="page-item"> <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Попередня</a></li>
           {% endif %}
-    
+
           {% if page_obj.has_next %}
           <li class="page-item"> <a class="page-link" href="?page={{ page_obj.next_page_number }}">Наступна</a></li>
           <li class="page-item"> <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages}} &raquo;</a></li>
@@ -104,7 +105,7 @@
 </div> 
 </div>
     
-<script src="{% static 'js/searchExpenses.js' %}">
+<script src="{% static 'js/searchIncomes.js' %}">
 
 </script>
     

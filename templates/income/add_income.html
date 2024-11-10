@@ -2,17 +2,17 @@
 {% block content %}
 
 <div class="container mt-4">
-    
+
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'expenses' %}">Витрати</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'income' %}">Надходження</a></li>
             <li class="breadcrumb-item active" aria-current="page">Додати</li>
         </ol>
     </nav>
 
     <div class="card">
         <div class="card-body">
-            <form action="{% url 'add-expenses' %}" method="post">
+            <form action="{% url 'add-income' %}" method="post">
                 {% include 'partials/_messages.html' %}
                 {% csrf_token %}
                 
@@ -35,18 +35,18 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="">Категорія</label>
-                    <select class="form-control" name="category">
-                        <option selected name="category" value="{{ values.category }}">{{ values.category }}</option>
-                        {% for category in categories %}
-                            <option name="category" value="{{ category.name }}">{{ category.name }}</option>
+                    <label for="">Джерело</label>
+                    <select class="form-control" name="source">
+                        <option selected name="source" value="{{ values.source }}">{{ values.source }}</option>
+                        {% for source in sources %}
+                            <option name="source" value="{{ source.name }}">{{ source.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 
                 <div class="form-group">
                     <label for="">Дата</label>
-                    <input type="date" class="form-control form-control-sm" name="expense_date">
+                    <input type="date" class="form-control form-control-sm" name="income_date">
                 </div>
                 
                 <button type="submit" class="btn btn-primary btn-sm mt-3">Додати</button>

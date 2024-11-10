@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-4">
+    
+    <div class="row">
+        <div class="col-md-10">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'income' %}">Надходження</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Редагувати надходження</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-md-2">
+            <a href="{% url 'income-delete' income.id %}" class="btn btn-danger">Видалити</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form action="{% url 'edit-income' income.id %}" method="post">
+                {% include 'partials/_messages.html' %}
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="">Сума</label>
+                    <input 
+                            type="text" 
+                            class="form-control form-control-sm" 
+                            name="amount" 
+                            value="{{ values.amount }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="">Опис</label>
+                    <input 
+                            type="text" 
+                            class="form-control form-control-sm" 
+                            name="description" 
+                            value="{{ values.description }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="">Джерело</label>
+                    <select class="form-control" name="source">
+                        {% for source in sources %}
+                            <option value="{{ source.name }}" 
+                                    {% if values.category == source.name %}selected{% endif %}>
+                                {{ source.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="">Дата</label>
+                    <input type="date" 
+                           class="form-control form-control-sm" 
+                           name="income_date" value="{{ values.date | date:'Y-m-d' }}">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-sm mt-3">Зберегти</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
