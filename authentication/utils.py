@@ -10,3 +10,14 @@ class AppTokenGenerator(PasswordResetTokenGenerator):
 
 
 account_activation_token = AppTokenGenerator()
+
+
+class PasswordResetTokenGenerator(PasswordResetTokenGenerator):
+    def _make_hash_value(self, user, timestamp):
+        return (
+                text_type(user.pk) + text_type(timestamp) +
+                text_type(user.is_active)
+        )
+
+
+password_reset_token = PasswordResetTokenGenerator()

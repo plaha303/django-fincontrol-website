@@ -11,7 +11,9 @@ from django.urls import reverse
 from django.utils.encoding import smart_bytes, smart_str, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.sites.shortcuts import get_current_site
-from .utils import account_activation_token
+
+from fincontrol import settings
+from .utils import account_activation_token, password_reset_token
 from django.contrib import auth
 
 
@@ -55,10 +57,6 @@ class RegistrationView(View):
         return render(request, 'authentication/register.html')
 
     def post(self, request):
-        # Get user data
-        # validate
-        # create a user account
-
         username = request.POST['username']
         email = request.POST['email']
         password = request.POST['password']
@@ -154,3 +152,93 @@ class LogoutView(View):
         auth.logout(request)
         messages.success(request, 'Ви вийшли з облікового запису')
         return redirect('login')
+
+
+class ResetPasswordEmail(View):
+    def get(self, request):
+        return render(request, 'authentication/reset-password.html')
+
+    def post(self, request):
+        email = request.POST.get('email')
+        context = {
+            'values': request.POST
+        }
+        if not validate_email(email):
+            messages.error(request, 'Введіть коректну адресу електронної пошти')
+            return render(request, 'authentication/reset-password.html', context)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            messages.error(request, 'Користувача з такою адресою електронної пошти не існує')
+            return render(request, 'authentication/reset-password.html', context)
+
+        uidb64 = urlsafe_base64_encode(smart_bytes(user.pk))
+        domain = get_current_site(request).domain
+        reset_link = reverse('password_reset_confirm', kwargs={
+            'uidb64': uidb64, 'token': password_reset_token.make_token(user)})
+
+        reset_url = f'http://{domain}{reset_link}'
+        email_body = (
+            f'Привіт {user.username},\n\n'
+            'Ви отримали це повідомлення, оскільки на нашому сайті був зроблений запит на скидання пароля. '
+            'Якщо ви цього не робили, проігноруйте це повідомлення.\n\n'
+            'Щоб скинути свій пароль, перейдіть за посиланням нижче:\n\n'
+            f'{reset_url}'
+        )
+        email_subject = 'Скидання пароля'
+
+        email_message = EmailMessage(
+            subject=email_subject,
+            body=email_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[email],
+        )
+        email_message.send(fail_silently=False)
+        messages.success(request, 'Ми надіслали вам посилання для скидання пароля на вашу пошту')
+        return render(request, 'authentication/login.html')
+
+
+class PasswordResetConfirmView(View):
+    def get(self, request, uidb64, token):
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        if user is not None and password_reset_token.check_token(user, token):
+            return render(request, 'authentication/password_reset_confirm.html',
+                          {'user': user, 'uid': uidb64, 'token': token})
+        else:
+            messages.error(request, 'Посилання для скидання пароля недійсне, спробуйте знову')
+            return redirect('reset-password')
+
+    def post(self, request, uidb64, token):
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        context = {
+            'uid': uidb64,
+            'token': token
+        }
+        password = request. POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        if password != confirm_password:
+            messages.error(request, 'Паролі не співпадають')
+            return render(request, 'authentication/password_reset_confirm.html', context)
+        if len(password) < 6:
+            messages.error(request, 'Пароль повинен бути не менше 6 символів')
+            return render(request, 'authentication/password_reset_confirm.html', context)
+
+        if user is not None and password_reset_token.check_token(user, token):
+            user.set_password(password)
+            user.save()
+            messages.success(request, 'Пароль змінено')
+            return redirect('login')
+        else:
+            messages.error(request, 'Щось пішло не так, спробуйте знову')
+            return redirect('authentication/password_reset_confirm.html', context)
