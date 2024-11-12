@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -29,7 +29,8 @@ def index(request):
     paginator = Paginator(expenses, 5)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    currency = UserPreferences.objects.get(user=request.user).currency
+    user_preferences = UserPreferences.objects.filter(user=request.user).first()
+    currency = user_preferences.currency if user_preferences else None
     context = {
         'expenses': expenses,
         'page_obj': page_obj,
@@ -64,7 +65,7 @@ def add_expense(request):
             messages.error(request, 'Дата є обов\'язковою')
         else:
             try:
-                date = datetime.strptime(date, '%Y-%m-%d').date()
+                date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
             except ValueError:
                 messages.error(request, 'Невірний формат дати')
             else:
@@ -100,7 +101,7 @@ def expense_edit(request, id):
 
         if date:
             try:
-                date = datetime.strptime(date, '%Y-%m-%d').date()
+                date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
             except ValueError:
                 messages.error(request, 'Неправильний формат дати.')
                 return render(request, 'expenses/edit-expense.html', context)
@@ -123,3 +124,33 @@ def delete_expense(request, id):
     expense.delete()
     messages.success(request, 'Витрати успішно видалено')
     return redirect('expenses')
+
+
+def expense_category_summary(request):
+    today_date = datetime.date.today()
+    six_months_ago = today_date - datetime.timedelta(days=30*6)
+    expenses = Expense.objects.filter(owner=request.user,
+                                      date__gte=six_months_ago,
+                                      date__lte=today_date)
+    finalrep = {}
+
+    def get_category(expense):
+        return expense.category
+    category_list = list(set(map(get_category, expenses)))
+
+    def get_expense_category_amount(category):
+        amount = 0
+        filtered_by_category = expenses.filter(category=category)
+        for item in filtered_by_category:
+            amount += item.amount
+        return amount
+
+    for x in expenses:
+        for y in category_list:
+            finalrep[y] = get_expense_category_amount(y)
+
+    return JsonResponse({'expense_category_data': finalrep}, safe=False)
+
+
+def stats_view(request):
+    return render(request, 'expenses/stats.html')

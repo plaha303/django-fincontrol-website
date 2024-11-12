@@ -16,8 +16,18 @@ from fincontrol import settings
 from .utils import account_activation_token, password_reset_token
 from django.contrib import auth
 
+import threading
+
 
 # Create your views here.
+
+class EmailThread(threading.Thread):
+    def __init__(self, email_message):
+        self.email_message = email_message
+        threading.Thread.__init__(self)
+
+    def run(self):
+        self.email_message.send(fail_silently=False)
 
 
 class EmailValidationView(View):
@@ -91,8 +101,8 @@ class RegistrationView(View):
                     'plahotin033@gmail.com',
                     [email],
                 )
-                email.send(fail_silently=False)
-                messages.success(request, 'Аккаунт успішно створено')
+                EmailThread(email).start()
+                messages.success(request, 'Аккаунт успішно створено. Перевірте свою пошту для активації')
                 return render(request, 'authentication/register.html')
 
         messages.error(request, 'Користувач з таким ім\'ям вже існує')
@@ -194,7 +204,7 @@ class ResetPasswordEmail(View):
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[email],
         )
-        email_message.send(fail_silently=False)
+        EmailThread(email_message).start()
         messages.success(request, 'Ми надіслали вам посилання для скидання пароля на вашу пошту')
         return render(request, 'authentication/login.html')
 
